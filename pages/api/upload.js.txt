@@ -1,0 +1,25 @@
+import cloudinary from "cloudinary";
+
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export default async function handler(req, res) {
+  if (req.method === "POST") {
+    try {
+      const fileStr = req.body.image; // Imagem em base64
+      const uploadResponse = await cloudinary.v2.uploader.upload(fileStr, {
+        folder: "album-compartilhado", // Nome da pasta no Cloudinary
+      });
+
+      res.json({ url: uploadResponse.secure_url });
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      res.status(500).json({ error: "Erro no upload da imagem" });
+    }
+  } else {
+    res.status(405).json({ error: "Método não permitido" });
+  }
+}

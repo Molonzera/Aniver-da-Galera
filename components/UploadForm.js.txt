@@ -1,0 +1,55 @@
+import { useState } from "react";
+
+export default function UploadForm() {
+  const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [uploadedUrl, setUploadedUrl] = useState("");
+
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = () => {
+        setImage(reader.result);
+      };
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!image) return alert("Escolha uma imagem primeiro!");
+
+    setLoading(true);
+    try {
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image }),
+      });
+
+      const data = await response.json();
+      setUploadedUrl(data.url);
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      alert("Erro ao enviar a imagem.");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ textAlign: "center", padding: "20px" }}>
+      <h2>Upload de Imagem</h2>
+      <input type="file" accept="image/*" onChange={handleImageChange} />
+      {image && <img src={image} alt="Preview" width="200px" />}
+      <button onClick={handleUpload} disabled={loading}>
+        {loading ? "Enviando..." : "Enviar Foto"}
+      </button>
+      {uploadedUrl && (
+        <div>
+          <p>Imagem enviada com sucesso!</p>
+          <img src={uploadedUrl} alt="Imagem enviada" width="200px" />
+        </div>
+      )}
+    </div>
+  );
+}

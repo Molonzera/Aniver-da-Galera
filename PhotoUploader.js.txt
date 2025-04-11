@@ -1,0 +1,48 @@
+import { useState } from "react";
+
+export default function PhotoUploader() {
+  const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreview(reader.result);
+      setImage(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUpload = async () => {
+    if (!image) return;
+    setUploading(true);
+    
+    const response = await fetch("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image }),
+    });
+
+    const data = await response.json();
+    if (data.url) {
+      alert("Upload concluído!");
+      setPreview(null);
+    } else {
+      alert("Erro no upload.");
+    }
+
+    setUploading(false);
+  };
+
+  return (
+    <div>
+      <input type="file" accept="image/*" onChange={handleFileChange} />
+      {preview && <img src={preview} alt="Preview" width="200px" />}
+      <button onClick={handleUpload} disabled={uploading}>
+        {uploading ? "Enviando..." : "Enviar"}
+      </button>
+    </div>
+  );
+}
